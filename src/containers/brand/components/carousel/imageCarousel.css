@@ -1,0 +1,43 @@
+.image-carousel .carousel-root > div.carousel:last-child {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  display: flex;
+  justify-content: center;
+}
+.image-carousel .carousel img {
+  width: 100%;
+  display: inline-block;
+  pointer-events: none;
+  object-fit: cover;
+}
+.image-carousel .carousel .thumb {
+  -webkit-transition: border 0.15s ease-in;
+  -moz-transition: border 0.15s ease-in;
+  -ms-transition: border 0.15s ease-in;
+  -o-transition: border 0.15s ease-in;
+  transition: border 0.15s ease-in;
+  display: inline-block;
+  margin-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 65px;
+  width: 85px!important;
+}
+
+@media only screen and (max-width: 960px) {
+  .image-carousel .carousel .control-next.control-arrow {
+    margin-right: 8px;
+  }
+  .image-carousel .carousel .control-prev.control-arrow {
+    margin-left: 8px;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .image-carousel div:first-child {
+    max-height: 55vh;
+  }
+}
