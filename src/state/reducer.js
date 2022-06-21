@@ -1,18 +1,16 @@
 import immutable from 'immutable';
-import {
-  INIT_EDITOR_REF, ON_BEFORE_EDITOR_CHANGE, DELETE_BLOCK_EDITOR
-} from './action';
+import { DELETE_BLOCK_EDITOR, INIT_EDITOR_REF, ON_BEFORE_EDITOR_CHANGE } from './action';
 
 export const initialState = {
   data: [{
     id: 'azbc',
-    content: `<h1>Page 1</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>`
+    content: "<h1>Page 1</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>"
   }, {
     id: 'ad2s',
-    content: `<h1>Page 2</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>`
+    content: "<h1>Page 2</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>"
   }, {
     id: 'asd3',
-    content: `<h1>Page 3</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>`
+    content: "<h1>Page 3</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>"
   }],
   refs: {}
 };

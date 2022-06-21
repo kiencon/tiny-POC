@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { initEditorRef, handleOnBeforeEditorChange, handleDeleteBlockEditor } from '../../../state/action';
+import { handleDeleteBlockEditor, handleOnBeforeEditorChange, initEditorRef } from '../../../state/action';
 
 const TINY_INLINE_TYPE = 'tiny_inline';
 const TINY_TABLE_TYPE = 'tiny_table';
@@ -80,7 +80,6 @@ const TinymceCustom = React.memo((props) => {
   const {
     value,
     id,
-    createNewPage,
   } = props;
   const {
     tinyType = TINY_INLINE_TYPE,
@@ -124,10 +123,10 @@ const TinymceCustom = React.memo((props) => {
     if (checkOverflow(wrapEditorRef.current)) {
       console.log(editorRef.current.targetElm)
       dispatch(handleOnBeforeEditorChange(id, editorRef.current.targetElm.lastChild.outerHTML));
-      // wrapEditorRef.current.firstChild.innerHTML = value.replaceAll('<p>&nbsp;</p>', '');
       return;
     } else {
       // onChangeContent(id, value);
+      setInnerValue(value);
     }
     if (!value) {
       dispatch(handleDeleteBlockEditor(id));
@@ -188,6 +187,12 @@ const TinymceCustom = React.memo((props) => {
     console.log('onBeforeSetContent', e);
   };
 
+  const handleOnKeyUp = e => {
+    if (e.key === 'Backspace') {
+      console.log('handleOnKeyUp', e);
+    }
+  };
+
   return (
     <div className={classes.join(' ')}>
       <EditorWrapper className='editor-wrapper' ref={wrapEditorRef}>
@@ -213,7 +218,7 @@ const TinymceCustom = React.memo((props) => {
             dispatch(initEditorRef(id, editor));
           }}
           onEditorChange={onEditorChange}
-          onKeyUp={props.onKeyUp}
+          onKeyUp={handleOnKeyUp}
           onBeforeSetContent={onBeforeSetContent}
           onSelectionChange={props.onSelectionChange}
           onBlur={handleOnBlur}
@@ -225,19 +230,8 @@ const TinymceCustom = React.memo((props) => {
           onObjectResizeStart={props.onObjectResizeStart}
         />
       </EditorWrapper>
-      <button
-        onClick={() => {
-          //editorRef.current.focus();
-          setCursor(editorRef.current);
-        }}
-      >On focus</button>
-      <button
-        onClick={(e) => {
-          console.log(editorRef.current.getContent());
-        }}
-      >On Saved</button>
     </div>
-  )
+  );
 });
 
 // TinymceCustom.propTypes = {
