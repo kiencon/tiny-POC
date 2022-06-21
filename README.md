@@ -1,4 +1,4 @@
-DAM Dashboard Project
+ Tiny demo Project
 
 # Configuration for auto-format code
 - go to settings.json from vscode
