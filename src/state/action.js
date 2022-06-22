@@ -84,3 +84,12 @@ export const handleDeleteBlockEditor = id => ({
   type: DELETE_BLOCK_EDITOR,
   payload: id,
 });
+
+export const OVERLFOW = 'OVERLFOW';
+export const handleOverflow = (id, htmlContent) => ({
+  type: OVERLFOW,
+  payload: {
+    id,
+    htmlContent,
+  },
+});

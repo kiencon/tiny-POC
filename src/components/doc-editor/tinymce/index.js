@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { handleDeleteBlockEditor, handleOnBeforeEditorChange, initEditorRef } from '../../../state/action';
+import { handleDeleteBlockEditor, handleOverflow, initEditorRef } from '../../../state/action';
 
 const TINY_INLINE_TYPE = 'tiny_inline';
 const TINY_TABLE_TYPE = 'tiny_table';
@@ -116,29 +116,32 @@ const TinymceCustom = React.memo((props) => {
         props.onOutFocus(event)
       }
     }, 300)
-  }
+  };
 
   const onEditorChange = (value) => {
     console.log('onEditorChange');
     if (checkOverflow(wrapEditorRef.current)) {
-      console.log(editorRef.current.targetElm)
-      dispatch(handleOnBeforeEditorChange(id, editorRef.current.targetElm.lastChild.outerHTML));
+      // console.log(editorRef.current.targetElm)
+      // dispatch(handleOnBeforeEditorChange(id, editorRef.current.targetElm.lastChild.outerHTML));
+      console.log('id', id);
+      console.log('overflowHtml', editorRef.current.targetElm.lastChild.outerHTML);
+      dispatch(handleOverflow(id, editorRef.current.targetElm.lastChild.outerHTML));
       return;
     } else {
       // onChangeContent(id, value);
-      setInnerValue(value);
+      // setInnerValue(value);
     }
     if (!value) {
       dispatch(handleDeleteBlockEditor(id));
     }
-  }
+  };
 
   const handleExecCommand = (event, editor) => {
     console.log(handleExecCommand);
     console.log('event', event);
     console.log('editor', editor);
     // props.onExecCommand(event, editor)
-  }
+  };
 
   const valueComputed = () => {
     // const tempDiv = document.createElement('div')
