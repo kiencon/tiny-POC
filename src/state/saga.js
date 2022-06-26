@@ -1,64 +1,125 @@
-import jwtDecode from 'jwt-decode';
-import { put, takeLeading } from 'redux-saga/effects';
-import { CATEGORIES, TEMPLATE_BASE_URL } from '../components/common/const';
-import Cookies from '../helpers/cookies';
+import { takeLeading, put } from 'redux-saga/effects';
 import {
-  changeTeamError, changeTeamSuccess, CHANGE_TEAM_ACTION, getAvailableCategoriesSuccess,
-  getCurrentUserError, getCurrentUserSuccess,
-  getTeamInformationSuccess, GET_CURRENT_USER_REQUEST,
+  OVERLFOW, handleOverflowSuccess, handleOverflowError
 } from './action';
-import {
-  changeTokenWithTeamId, getAvailableCategories, getTeams, getUserInformation,
-} from './api';
 
-const getCurrentUser = async () => {
-  let userId;
-  let teamId;
-  const authToken = Cookies.get('auth_token') || localStorage.getItem('auth_token');
-  try {
-    const { id, teamId: userTeamId } = jwtDecode(authToken);
-    userId = id;
-    teamId = userTeamId;
-  } catch (e) {
-    console.log(e);
-    window.location.href = TEMPLATE_BASE_URL;
+const NOT_FOUND = -1;
+const TINYMCE_BR = '<br>';
+const BR = '&nbsp;';
+const EMPTY_STRING = '';
+
+const getIndexDetail = (id, arrayObj) => {
+  let prevIndex, currentIndex, nextIndex;
+  currentIndex = arrayObj.findIndex(e => e.id === id);
+  if (currentIndex === NOT_FOUND) {
+    return { prevIndex: NOT_FOUND, currentIndex: NOT_FOUND, nextIndex: NOT_FOUND };
   }
-  const { data: userInformation } = await getUserInformation(userId);
-  const { data: team } = await getTeams();
-  const user = { ...userInformation, ...team, teamId };
-  Cookies.set('auth_token', authToken);
-  Cookies.set('user_info', user);
-
-  return user;
+  nextIndex = currentIndex + 1;
+  prevIndex = currentIndex - 1;
+  if (nextIndex >= arrayObj.length) {
+    nextIndex = NOT_FOUND;
+  }
+  if (prevIndex < 0) {
+    prevIndex = NOT_FOUND;
+  }
+  return { prevIndex, currentIndex, nextIndex };
 };
 
-const getCategories = categoryIdObjects => Object.values(CATEGORIES).filter(item => categoryIdObjects[item.value]);
+const replaceLast = (str, replacedValue) => {
+  str = str.replaceAll('\n', '').replaceAll(TINYMCE_BR, BR);
+  replacedValue = replacedValue.replaceAll(TINYMCE_BR, BR);
+  let isEffected = false;
+  if (str.endsWith(replacedValue)) {
+    const findIndex = str.lastIndexOf(replacedValue);
+    isEffected = true;
+    return [str.substring(0, findIndex), isEffected];
+  }
+  return [str, isEffected];
+};
 
-const getAllInformations = () => Promise.all([getAvailableCategories(), getCurrentUser(), getTeams()]);
+const getRefs = stateRef => stateRef.get('data').refs;
 
-export function* getCurrentUserSaga() {
+const deepCopyDataAndRemoveEndline = stateRef => stateRef
+  .get('data')
+  .data
+  .map(item => ({ ...item, content: item.content.replaceAll('\n', '') }));
+
+const setCaret = (el) => {
+  const range = document.createRange()
+  const sel = window.getSelection()
+
+  range.setStart(el.lastChild, 1)
+  range.collapse(true)
+
+  sel.removeAllRanges()
+  sel.addRange(range)
+};
+
+const getOverflowHtmls = (editorRef) => {
+  const overflowHtmls = [];
+  const wrapBottom = editorRef.targetElm.parentNode.getBoundingClientRect().bottom;
+  const childNodes = editorRef.targetElm.childNodes;
+
+  for (let i = childNodes.length - 1; i >= 0; i -= 1) {
+    const bottom = childNodes[i].getBoundingClientRect().bottom;
+    if (wrapBottom < bottom) {
+      overflowHtmls.push(childNodes[i].outerHTML);
+    } else {
+      break;
+    }
+  }
+
+  return overflowHtmls.reverse().join(EMPTY_STRING);
+};
+
+const setDataFromRefs = (data, refs, currentIndex) => {
+  for (let i = currentIndex; i < data.length; i += 1) {
+    const { id } = data[i];
+    if (refs[id]) {
+      data[i].content = refs[id].getContent();
+    }
+  }
+};
+
+function* handleOverflowEvent({ payload }) {
   try {
-    const [categoryIdObjects, userInformation, teamInformation] = yield getAllInformations();
-    yield put(getCurrentUserSuccess(userInformation));
-    yield put(getTeamInformationSuccess(teamInformation.data));
-    yield put(getAvailableCategoriesSuccess(getCategories(categoryIdObjects.data)));
+    const { id: currentPageId, state } = payload;
+    const refs = getRefs(state);
+    const copiedata = deepCopyDataAndRemoveEndline(state);
+    const { currentIndex } = getIndexDetail(currentPageId, copiedata);
+    setDataFromRefs(copiedata, refs, currentIndex);
+
+    for (let i = currentIndex; i < copiedata.length; i += 1) {
+      const { id, content } = copiedata[i];
+      if (refs[id] === undefined) {
+        break;
+      }
+      const overflow = getOverflowHtmls(refs[id]);
+      // replace new
+      const [newContent, isEffected] = replaceLast(content, overflow);
+      if (isEffected) {
+        copiedata[i].content = newContent;
+        refs[copiedata[i].id].setContent(copiedata[i].content);
+      }
+      // check create new page if needed
+      if (i === copiedata.length - 1 && overflow !== EMPTY_STRING) {
+        copiedata.push({ id: Date.now(), content: overflow });
+      } else { // otherwise concat overflow content into next page
+        if (i < copiedata.length - 1) {
+          copiedata[i + 1].content = overflow.concat(copiedata[i + 1].content);
+          // set content
+          refs[copiedata[i + 1].id].setContent(copiedata[i + 1].content);
+        }
+      }
+    }
+    yield put(handleOverflowSuccess(copiedata, refs, currentPageId));
   } catch (error) {
-    console.log(error);
-    yield put(getCurrentUserError(error));
+    yield console.error('------------------------ERROR------------------------');
+    yield console.log(error);
+    yield put(handleOverflowError(payload.state));
   }
 }
 
-function* changeTeamSaga({ payload }) {
-  try {
-    const teamId = payload;
-    const { data } = yield changeTokenWithTeamId(teamId);
-    yield put(changeTeamSuccess(data));
-  } catch (error) {
-    yield put(changeTeamError(error));
-  }
-}
-
-export default function* createGetCurrentUserSaga() {
-  yield takeLeading(GET_CURRENT_USER_REQUEST, getCurrentUserSaga);
-  yield takeLeading(CHANGE_TEAM_ACTION, changeTeamSaga);
+export default function* handleOverflowEventSaga() {
+  yield takeLeading(OVERLFOW, handleOverflowEvent);
 }

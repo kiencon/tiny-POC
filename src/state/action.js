@@ -67,8 +67,6 @@ export const ON_BEFORE_EDITOR_CHANGE = 'ON_BEFORE_EDITOR_CHANGE';
 export const DELETE_BLOCK_EDITOR = 'DELETE_BLOCK_EDITOR';
 
 export const initEditorRef = (id, refObj) => {
-  console.log(id);
-  console.log(refObj);
   return {
     type: INIT_EDITOR_REF,
     payload: { id, refObj },
@@ -86,10 +84,30 @@ export const handleDeleteBlockEditor = id => ({
 });
 
 export const OVERLFOW = 'OVERLFOW';
-export const handleOverflow = (id, htmlContent) => ({
+export const handleOverflow = (id, state) => ({
   type: OVERLFOW,
   payload: {
     id,
-    htmlContent,
+    state,
   },
 });
+
+export const ON_KEY_UP_EVENT = 'ON_KEY_UP_EVENT';
+export const handleOnKeyUpEvent = id => ({
+  type: ON_KEY_UP_EVENT,
+  payload: id,
+});
+export const OVERLFOW_SUCCESS = 'OVERLFOW_SUCCESS';
+export const handleOverflowSuccess = (data, refs, currentPageId) => ({
+  type: OVERLFOW_SUCCESS,
+  response: {
+    data,
+    refs,
+    currentPageId,
+  }
+});
+export const OVERLFOW_ERROR = 'OVERLFOW_ERROR';
+export const handleOverflowError = state => ({
+  type: OVERLFOW_ERROR,
+  response: state,
+})

@@ -2,14 +2,12 @@ import { Editor } from '@tinymce/tinymce-react';
 import React, {
   useRef, useState
 } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { handleDeleteBlockEditor, handleOverflow, initEditorRef } from '../../../state/action';
-
+import { handleOverflow, initEditorRef } from '../../../state/action';
+import * as selector from '../../../state/selector';
 const TINY_INLINE_TYPE = 'tiny_inline';
 const TINY_TABLE_TYPE = 'tiny_table';
-const EVENT_CHECKLIST = { key: '.' };
-const ON_CHANGE_CHECK_LIST = 'onChangeCheckList';
 const QUICKBAR_BTNS = `bold italic quicklink h2 h3 blockquote numlist bullist checklist formatpainter`;
 const TOOLBAR_BTNS = `addfield | tablemergecells tablesplitcells | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | cellchangebackcolor tabledeletecustom`
 
@@ -55,7 +53,6 @@ const checkOverflow = (el) => {
 
   const isOverflowing = el.clientWidth < el.scrollWidth
     || el.clientHeight < el.scrollHeight;
-
   el.style.overflow = curOverflow;
 
   return isOverflowing;
@@ -76,14 +73,13 @@ const setCursor = (ed, element, start) => {
   setCaret(ed.targetElm);
 };
 
-const TinymceCustom = React.memo((props) => {
+const TinymceCustom = (props) => {
   const {
     value,
     id,
   } = props;
   const {
     tinyType = TINY_INLINE_TYPE,
-    tinyUUID,
     blockOrder,
     item,
     block,
@@ -97,16 +93,14 @@ const TinymceCustom = React.memo((props) => {
   const wrapEditorRef = useRef(null);
   console.log(`RENDER TinymceCustom ${editorRef.current?.id}`);
   const [innerValue, setInnerValue] = useState(value);
-  const [classes, setClasses] = useState(['tinymce-custom']);
 
   const dispatch = useDispatch();
 
-  // const { proposalTokensMap } = useSelector(
-  //   ({ present }) => ({
-  //     proposalTokensMap: present.proposal.tokensMap,
-  //   }),
-  //   shallowEqual,
-  // )
+  const {
+    state,
+  } = useSelector(state => ({
+    state: selector.selectBlocksReducer(state),
+  }));
 
   const handleOnBlur = event => {
     if (props.onBlur) props.onBlur(editorRef)
@@ -118,21 +112,9 @@ const TinymceCustom = React.memo((props) => {
     }, 300)
   };
 
-  const onEditorChange = (value) => {
-    console.log('onEditorChange');
+  const onEditorChange = () => {
     if (checkOverflow(wrapEditorRef.current)) {
-      // console.log(editorRef.current.targetElm)
-      // dispatch(handleOnBeforeEditorChange(id, editorRef.current.targetElm.lastChild.outerHTML));
-      console.log('id', id);
-      console.log('overflowHtml', editorRef.current.targetElm.lastChild.outerHTML);
-      dispatch(handleOverflow(id, editorRef.current.targetElm.lastChild.outerHTML));
-      return;
-    } else {
-      // onChangeContent(id, value);
-      // setInnerValue(value);
-    }
-    if (!value) {
-      dispatch(handleDeleteBlockEditor(id));
+      dispatch(handleOverflow(id, state));
     }
   };
 
@@ -143,61 +125,19 @@ const TinymceCustom = React.memo((props) => {
     // props.onExecCommand(event, editor)
   };
 
-  const valueComputed = () => {
-    // const tempDiv = document.createElement('div')
-    // tempDiv.innerHTML = props.value
-    // const spanNodeList = tempDiv.querySelectorAll('[data-name='dynamic-token']')
-    // if (!spanNodeList.length) {
-    //   setInnerValue(props.value)
-    //   return
-    // }
-
-    // spanNodeList.forEach(span => {
-    //   const tokenKey = span.dataset.key
-    //   if (!proposalTokensMap[tokenKey]) return
-    //   span.innerText = proposalTokensMap[tokenKey].value
-    // })
-
-    // setInnerValue(tempDiv.innerHTML)
-  }
-
-  // run it at a second time change value
-  // useEffect(() => {
-  //   if (!editorRef.current.editor) {
-  //     return
-  //   }
-
-  //   if (typeof props.onInit !== 'function') {
-  //     return
-  //   }
-
-  //   valueComputed()
-  //   // eslint-disable-next-line
-  // }, [tinyUUID])
-
-  // if (window.tinyEventDispatcher) {
-  //   window.tinyEventDispatcher.on(ON_CHANGE_CHECK_LIST, () => {
-  //     const { activeEditor } = window.tinymce
-  //     const isBlock = activeEditor.settings.blockOrder === blockOrder
-  //     const isItem = activeEditor.settings.itemOrder === order
-  //     if (isBlock && isItem) {
-  //       props.onKeyUp(EVENT_CHECKLIST, activeEditor)
-  //     }
-  //   })
-  // }
-
   const onBeforeSetContent = (e) => {
-    console.log('onBeforeSetContent', e);
+    // console.log('onBeforeSetContent', e);
   };
 
   const handleOnKeyUp = e => {
+    // dispatch(actions.handleOnKeyUpEvent(id));
     if (e.key === 'Backspace') {
       console.log('handleOnKeyUp', e);
     }
   };
 
   return (
-    <div className={classes.join(' ')}>
+    <div className='tinymce-custom'>
       <EditorWrapper className='editor-wrapper' ref={wrapEditorRef}>
         <Editor
           disabled={props.disabled}
@@ -217,7 +157,6 @@ const TinymceCustom = React.memo((props) => {
           apiKey={TINY_API_KEY}
           onInit={(evt, editor) => {
             editorRef.current = editor;
-            console.log('id', editor);
             dispatch(initEditorRef(id, editor));
           }}
           onEditorChange={onEditorChange}
@@ -235,36 +174,7 @@ const TinymceCustom = React.memo((props) => {
       </EditorWrapper>
     </div>
   );
-});
-
-// TinymceCustom.propTypes = {
-//   id: PropTypes.string,
-//   value: PropTypes.string,
-//   showToolbar: PropTypes.bool,
-//   onEditorChange: PropTypes.func,
-//   onExecCommand: PropTypes.func,
-//   onFocus: PropTypes.func,
-//   onKeyPress: PropTypes.func,
-//   onOutFocus: PropTypes.func,
-//   onKeyUp: PropTypes.func,
-//   onSelectionChange: PropTypes.func,
-//   onBlur: PropTypes.func,
-//   onInit: PropTypes.func,
-//   onClick: PropTypes.func,
-//   defaultText: PropTypes.string,
-//   Toolbar: PropTypes.elementType,
-//   toolbarKey: PropTypes.string,
-//   disabled: PropTypes.bool,
-//   tinyType: PropTypes.string,
-//   initProp: PropTypes.object,
-//   onObjectResized: PropTypes.func,
-//   onObjectResizeStart: PropTypes.func,
-// }
-
-// TinymceCustom.defaultProps = {
-//   onClick: () => { },
-//   onFocus: () => { },
-// }
+};
 
 const EditorWrapper = styled.div`
   .mce-content-body {

@@ -8,9 +8,12 @@
   background: #eee;
   height: 200px;
   width: 500px;
-  margin: 5px;
+  padding: 5px;
 }
 
+.tinymce-custom {
+  margin-bottom: 10px;
+}
 .hide {
   display: none !important;
 }

@@ -17,9 +17,9 @@ const App = () => {
         blocks.data.map(({ id, content }) => {
           return (<Editor key={id}
             id={id} value={content}
-            trickRender={() => {}}
-            // onChangeContent={onChangeContent}
-            // createNewPage={createNewPage}
+            trickRender={() => { }}
+          // onChangeContent={onChangeContent}
+          // createNewPage={createNewPage}
           />)
         })
       }
