@@ -76,9 +76,8 @@ const blocksReducer = (state = init(), action) => {
     }
 
     case DELETE_BLOCK_EDITOR: {
-      return state.update('data', data => ({
-        ...data,
-        data: action.response,
+      return state.update('data', () => ({
+        ...action.response,
       }));
     }
 

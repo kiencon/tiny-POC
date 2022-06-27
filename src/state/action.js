@@ -69,7 +69,7 @@ export const handleAttemptMoveContentUpSuccess = (data, refs, currentPageId) => 
 export const handleAttemptMoveContentUpError = () => ({
   type: ATTEMPT_MOVE_CONTENT_UP_ERROR,
 });
-export const handleDeleteEditor = data => ({
+export const handleDeleteEditor = (data, refs) => ({
   type: DELETE_BLOCK_EDITOR,
-  response: data,
+  response: { data, refs },
 });

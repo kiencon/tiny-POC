@@ -63,7 +63,7 @@ const setCaret = (el) => {
 
 const setCursor = (id, refs) => {
   if (id && refs[id]) {
-    refs[id].setFocus();
+    setCaret(refs[id].targetElm);
   }
 }
 
@@ -147,16 +147,18 @@ function* handleAttemptMoveContentUp({ payload }) {
     // todo
     // we have just check empty line with <p> tag
     // enhance with other tags such as <h1>, <h2>...
-    if (currentContent === EMPTY_STRING && copiedata.length > 1) {
-      copiedata.pop();
-    }
-
     let focusPageId;
     if (prevIndex !== NOT_FOUND) {
-      focusPageId = copiedata[prevIndex];
+      focusPageId = copiedata[prevIndex].id;
     }
-    yield setCursor(focusPageId, refs);
-    yield put(handleDeleteEditor(copiedata));
+    const cloneRefs = { ...refs };
+    if (currentContent === EMPTY_STRING && copiedata.length > 1) {
+      copiedata.pop();
+      cloneRefs[id].destroy();
+      delete cloneRefs[id];
+      yield setCursor(focusPageId, refs);
+      yield put(handleDeleteEditor(copiedata, cloneRefs));
+    }
   } catch (error) {
     yield console.error('------------------------ERROR ON handleAttemptMoveContentUp-----------------');
     yield console.log(error);

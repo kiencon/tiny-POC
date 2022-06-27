@@ -11,6 +11,7 @@ const TINY_TABLE_TYPE = 'tiny_table';
 const QUICKBAR_BTNS = `bold italic quicklink h2 h3 blockquote numlist bullist checklist formatpainter`;
 const TOOLBAR_BTNS = `addfield | tablemergecells tablesplitcells | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | cellchangebackcolor tabledeletecustom`
 
+const BACKSPACE = 'Backspace';
 const CONFIG_BY_TYPE = {
   [TINY_INLINE_TYPE]: {
     toolbar: 'fasle',
@@ -45,14 +46,13 @@ const CONFIG_BY_TYPE = {
 const TINY_API_KEY = process.env.REACT_APP_TINY_API_KEY || 'u5sfb1u25uuw0a28t8gxh1762mrnf2skxekksa4709facfgk'
 const TINY_MCE_SRC = 'https://editors-upload.s3.amazonaws.com/lib/tinymce/js/tinymce/tinymce.min.js'
 
-const checkOverflow = (editorRef, wrapEditorRef) => {
+const checkOverflow = (editorRef) => {
   const wrapBottom = editorRef.current.targetElm.parentNode.getBoundingClientRect().bottom;
   const childNodes = editorRef.current.targetElm.childNodes;
 
   let isOverflow = false;
 
   for (let i = childNodes.length - 1; i >= 0; i -= 1) {
-    const item = childNodes[i].outerHTML;
     const bottom = childNodes[i].getBoundingClientRect().bottom;
     if (wrapBottom < bottom) {
       isOverflow = true;
@@ -61,21 +61,6 @@ const checkOverflow = (editorRef, wrapEditorRef) => {
   }
 
   return isOverflow;
-};
-
-function setCaret(el) {
-  var range = document.createRange()
-  var sel = window.getSelection()
-
-  range.setStart(el.lastChild, 1)
-  range.collapse(true)
-
-  sel.removeAllRanges()
-  sel.addRange(range)
-}
-
-const setCursor = (ed, element, start) => {
-  setCaret(ed.targetElm);
 };
 
 const TinymceCustom = (props) => {
@@ -131,12 +116,11 @@ const TinymceCustom = (props) => {
   };
 
   const onBeforeSetContent = (e) => {
-    // console.log('onBeforeSetContent', e);
+    console.log('onBeforeSetContent', e);
   };
 
   const handleOnKeyUp = e => {
-    // dispatch(actions.handleOnKeyUpEvent(id));
-    if (e.key === 'Backspace') {
+    if (e.key === BACKSPACE) {
       console.log('handleOnKeyUp', e);
       dispatch(handleAttemptMoveContentUp(state, id));
     }
