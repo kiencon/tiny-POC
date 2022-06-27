@@ -61,9 +61,10 @@ const getOverflowHtmls = (editorRef) => {
   const childNodes = editorRef.targetElm.childNodes;
 
   for (let i = childNodes.length - 1; i >= 0; i -= 1) {
+    const item = childNodes[i].outerHTML;
     const bottom = childNodes[i].getBoundingClientRect().bottom;
     if (wrapBottom < bottom) {
-      overflowHtmls.push(childNodes[i].outerHTML);
+      overflowHtmls.push(item);
     } else {
       break;
     }

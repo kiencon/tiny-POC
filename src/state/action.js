@@ -84,7 +84,7 @@ export const handleDeleteBlockEditor = id => ({
 });
 
 export const OVERLFOW = 'OVERLFOW';
-export const handleOverflow = (id, state) => ({
+export const handleOverflow = (state, id) => ({
   type: OVERLFOW,
   payload: {
     id,

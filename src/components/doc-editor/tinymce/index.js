@@ -45,17 +45,22 @@ const CONFIG_BY_TYPE = {
 const TINY_API_KEY = process.env.REACT_APP_TINY_API_KEY || 'u5sfb1u25uuw0a28t8gxh1762mrnf2skxekksa4709facfgk'
 const TINY_MCE_SRC = 'https://editors-upload.s3.amazonaws.com/lib/tinymce/js/tinymce/tinymce.min.js'
 
-const checkOverflow = (el) => {
-  const curOverflow = el.style.overflow;
+const checkOverflow = (editorRef, wrapEditorRef) => {
+  const wrapBottom = editorRef.current.targetElm.parentNode.getBoundingClientRect().bottom;
+  const childNodes = editorRef.current.targetElm.childNodes;
 
-  if (!curOverflow || curOverflow === "visible")
-    el.style.overflow = "hidden";
+  let isOverflow = false;
 
-  const isOverflowing = el.clientWidth < el.scrollWidth
-    || el.clientHeight < el.scrollHeight;
-  el.style.overflow = curOverflow;
+  for (let i = childNodes.length - 1; i >= 0; i -= 1) {
+    const item = childNodes[i].outerHTML;
+    const bottom = childNodes[i].getBoundingClientRect().bottom;
+    if (wrapBottom < bottom) {
+      isOverflow = true;
+      break;
+    }
+  }
 
-  return isOverflowing;
+  return isOverflow;
 };
 
 function setCaret(el) {
@@ -113,8 +118,8 @@ const TinymceCustom = (props) => {
   };
 
   const onEditorChange = () => {
-    if (checkOverflow(wrapEditorRef.current)) {
-      dispatch(handleOverflow(id, state));
+    if (checkOverflow(editorRef)) {
+      dispatch(handleOverflow(state, id));
     }
   };
 
