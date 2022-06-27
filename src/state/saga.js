@@ -1,12 +1,18 @@
 import { takeLeading, put } from 'redux-saga/effects';
 import {
-  OVERLFOW, handleOverflowSuccess, handleOverflowError
+  OVERLFOW, handleOverflowSuccess, handleOverflowError, ATTEMPT_MOVE_CONTENT_UP,
+  handleAttemptMoveContentUpError,
+  handleAttemptMoveContentUpSuccess,
+  handleDeleteEditor,
 } from './action';
 
 const NOT_FOUND = -1;
 const TINYMCE_BR = '<br>';
+const TINYMCE_BR_WITH_CLASS = '<br data-mce-bogus="1">';
 const BR = '&nbsp;';
 const EMPTY_STRING = '';
+const END_LINE = '\n';
+const EMPTY_LINE = '<p>&nbsp;</p>';
 
 const getIndexDetail = (id, arrayObj) => {
   let prevIndex, currentIndex, nextIndex;
@@ -26,8 +32,8 @@ const getIndexDetail = (id, arrayObj) => {
 };
 
 const replaceLast = (str, replacedValue) => {
-  str = str.replaceAll('\n', '').replaceAll(TINYMCE_BR, BR);
-  replacedValue = replacedValue.replaceAll(TINYMCE_BR, BR);
+  str = str.replaceAll(END_LINE, '').replaceAll(TINYMCE_BR, BR);
+  replacedValue = replacedValue.replaceAll(TINYMCE_BR, BR).replaceAll(TINYMCE_BR_WITH_CLASS, BR);
   let isEffected = false;
   if (str.endsWith(replacedValue)) {
     const findIndex = str.lastIndexOf(replacedValue);
@@ -42,7 +48,7 @@ const getRefs = stateRef => stateRef.get('data').refs;
 const deepCopyDataAndRemoveEndline = stateRef => stateRef
   .get('data')
   .data
-  .map(item => ({ ...item, content: item.content.replaceAll('\n', '') }));
+  .map(item => ({ ...item, content: item.content.replaceAll(END_LINE, '') }));
 
 const setCaret = (el) => {
   const range = document.createRange()
@@ -54,6 +60,12 @@ const setCaret = (el) => {
   sel.removeAllRanges()
   sel.addRange(range)
 };
+
+const setCursor = (id, refs) => {
+  if (id && refs[id]) {
+    refs[id].setFocus();
+  }
+}
 
 const getOverflowHtmls = (editorRef) => {
   const overflowHtmls = [];
@@ -107,7 +119,7 @@ function* handleOverflowEvent({ payload }) {
         copiedata.push({ id: Date.now(), content: overflow });
       } else { // otherwise concat overflow content into next page
         if (i < copiedata.length - 1) {
-          copiedata[i + 1].content = overflow.concat(copiedata[i + 1].content);
+          copiedata[i + 1].content = overflow.replaceAll(TINYMCE_BR_WITH_CLASS, BR).concat(copiedata[i + 1].content);
           // set content
           refs[copiedata[i + 1].id].setContent(copiedata[i + 1].content);
         }
@@ -115,12 +127,44 @@ function* handleOverflowEvent({ payload }) {
     }
     yield put(handleOverflowSuccess(copiedata, refs, currentPageId));
   } catch (error) {
-    yield console.error('------------------------ERROR------------------------');
+    yield console.error('------------------------ERROR ON handleOverflowEvent------------------------');
     yield console.log(error);
     yield put(handleOverflowError(payload.state));
   }
 }
 
+function* handleAttemptMoveContentUp({ payload }) {
+  try {
+    const {
+      state,
+      currentPageId,
+    } = payload;
+    const refs = getRefs(state);
+    const copiedata = deepCopyDataAndRemoveEndline(state);
+    const { prevIndex, currentIndex } = getIndexDetail(currentPageId, copiedata);
+    const { id } = copiedata[currentIndex];
+    const currentContent = refs[id].getContent();
+    // todo
+    // we have just check empty line with <p> tag
+    // enhance with other tags such as <h1>, <h2>...
+    if (currentContent === EMPTY_STRING && copiedata.length > 1) {
+      copiedata.pop();
+    }
+
+    let focusPageId;
+    if (prevIndex !== NOT_FOUND) {
+      focusPageId = copiedata[prevIndex];
+    }
+    yield setCursor(focusPageId, refs);
+    yield put(handleDeleteEditor(copiedata));
+  } catch (error) {
+    yield console.error('------------------------ERROR ON handleAttemptMoveContentUp-----------------');
+    yield console.log(error);
+    yield put(handleAttemptMoveContentUpError(payload.state));
+  }
+};
+
 export default function* handleOverflowEventSaga() {
   yield takeLeading(OVERLFOW, handleOverflowEvent);
+  yield takeLeading(ATTEMPT_MOVE_CONTENT_UP, handleAttemptMoveContentUp);
 }

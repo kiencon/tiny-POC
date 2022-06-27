@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { handleOverflow, initEditorRef } from '../../../state/action';
+import { handleOverflow, initEditorRef, handleAttemptMoveContentUp } from '../../../state/action';
 import * as selector from '../../../state/selector';
 const TINY_INLINE_TYPE = 'tiny_inline';
 const TINY_TABLE_TYPE = 'tiny_table';
@@ -138,6 +138,7 @@ const TinymceCustom = (props) => {
     // dispatch(actions.handleOnKeyUpEvent(id));
     if (e.key === 'Backspace') {
       console.log('handleOnKeyUp', e);
+      dispatch(handleAttemptMoveContentUp(state, id));
     }
   };
 

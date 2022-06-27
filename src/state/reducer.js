@@ -1,5 +1,5 @@
 import immutable from 'immutable';
-import { INIT_EDITOR_REF, OVERLFOW_ERROR, ON_KEY_UP_EVENT, OVERLFOW_SUCCESS } from './action';
+import { INIT_EDITOR_REF, OVERLFOW_ERROR, ON_KEY_UP_EVENT, OVERLFOW_SUCCESS, DELETE_BLOCK_EDITOR } from './action';
 
 export const initialState = {
   data: [{
@@ -73,6 +73,13 @@ const blocksReducer = (state = init(), action) => {
 
     case OVERLFOW_ERROR: {
       return action.response;
+    }
+
+    case DELETE_BLOCK_EDITOR: {
+      return state.update('data', data => ({
+        ...data,
+        data: action.response,
+      }));
     }
 
     default:
