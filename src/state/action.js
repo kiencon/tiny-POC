@@ -73,3 +73,8 @@ export const handleDeleteEditor = (data, refs) => ({
   type: DELETE_BLOCK_EDITOR,
   response: { data, refs },
 });
+export const MOVE_CONTENT_UP_SUCCESS = 'MOVE_CONTENT_UP_SUCCESS';
+export const handleMoveContentUpSuccess = data => ({
+  type: MOVE_CONTENT_UP_SUCCESS,
+  response: data,
+});

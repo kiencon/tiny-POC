@@ -2,8 +2,8 @@ import { takeLeading, put } from 'redux-saga/effects';
 import {
   OVERLFOW, handleOverflowSuccess, handleOverflowError, ATTEMPT_MOVE_CONTENT_UP,
   handleAttemptMoveContentUpError,
-  handleAttemptMoveContentUpSuccess,
   handleDeleteEditor,
+  handleMoveContentUpSuccess,
 } from './action';
 
 const NOT_FOUND = -1;
@@ -29,6 +29,17 @@ const getIndexDetail = (id, arrayObj) => {
     prevIndex = NOT_FOUND;
   }
   return { prevIndex, currentIndex, nextIndex };
+};
+
+const replaceFirst = (str, replacedValue) => {
+  str = str.replaceAll(END_LINE, '').replaceAll(TINYMCE_BR, BR);
+  replacedValue = replacedValue.replaceAll(TINYMCE_BR, BR).replaceAll(TINYMCE_BR_WITH_CLASS, BR);
+  let isEffected = false;
+  if (str.startsWith(replacedValue)) {
+    isEffected = true;
+    return [str.replace(replacedValue, EMPTY_STRING), isEffected];
+  }
+  return [str, isEffected];
 };
 
 const replaceLast = (str, replacedValue) => {
@@ -143,6 +154,7 @@ function* handleAttemptMoveContentUp({ payload }) {
     const copiedata = deepCopyDataAndRemoveEndline(state);
     const { prevIndex, currentIndex } = getIndexDetail(currentPageId, copiedata);
     const { id } = copiedata[currentIndex];
+    const { id: prevId } = copiedata[prevIndex];
     const currentContent = refs[id].getContent();
     // todo
     // we have just check empty line with <p> tag
@@ -152,12 +164,27 @@ function* handleAttemptMoveContentUp({ payload }) {
       focusPageId = copiedata[prevIndex].id;
     }
     const cloneRefs = { ...refs };
+    // remove the last empty page when user enter BACKSPACE
     if (currentContent === EMPTY_STRING && copiedata.length > 1) {
       copiedata.pop();
       cloneRefs[id].destroy();
       delete cloneRefs[id];
       yield setCursor(focusPageId, refs);
       yield put(handleDeleteEditor(copiedata, cloneRefs));
+    } else {
+      // if the current page is not empty, we must determine something
+      // should the item move up to the previous page?
+      // otherwise nothing happen
+      const splitCurrentContent = currentContent.split(END_LINE);
+      const firstItem = splitCurrentContent.shift();
+      const newCurrentContent = splitCurrentContent.join(EMPTY_STRING);
+      copiedata[currentIndex].content = newCurrentContent;
+      cloneRefs[id].setContent(newCurrentContent);
+      let { content: prevContent } = copiedata[prevIndex];
+      const newPreContent = prevContent.concat(firstItem);
+      cloneRefs[prevId].setContent(newPreContent);
+      copiedata[prevIndex].content = cloneRefs[prevId].getContent();
+      yield put(handleMoveContentUpSuccess(copiedata));
     }
   } catch (error) {
     yield console.error('------------------------ERROR ON handleAttemptMoveContentUp-----------------');
