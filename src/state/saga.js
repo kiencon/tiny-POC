@@ -14,6 +14,13 @@ const EMPTY_STRING = '';
 const END_LINE = '\n';
 const EMPTY_LINE = '<p>&nbsp;</p>';
 
+const makeConsistentDom = (data, refs) => {
+  for (let i = 0; i < data.length; i += 1) {
+    const { id } = data[i];
+    data[i].content = refs[id].getContent();
+  }
+};
+
 const getIndexDetail = (id, arrayObj) => {
   let prevIndex, currentIndex, nextIndex;
   currentIndex = arrayObj.findIndex(e => e.id === id);
@@ -152,6 +159,7 @@ function* handleAttemptMoveContentUp({ payload }) {
     } = payload;
     const refs = getRefs(state);
     const copiedata = deepCopyDataAndRemoveEndline(state);
+    yield makeConsistentDom(copiedata, refs);
     const { prevIndex, currentIndex } = getIndexDetail(currentPageId, copiedata);
     const { id } = copiedata[currentIndex];
     const { id: prevId } = copiedata[prevIndex];
