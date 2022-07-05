@@ -4,7 +4,12 @@ import {
   handleAttemptMoveContentUpError,
   handleDeleteEditor,
   handleMoveContentUpSuccess,
+  GET_BASE_TEMPLATE_DATA,
+  handleGetBaseTemplateDataSuccess,
+
 } from './action';
+
+import { getBaseTemplateDataApi } from './api';
 
 const NOT_FOUND = -1;
 const TINYMCE_BR = '<br>';
@@ -201,7 +206,27 @@ function* handleAttemptMoveContentUp({ payload }) {
   }
 };
 
+const handleGetBaseTemplateDataError = () => alert('Cannot fetch data');
+
+function* handleGetBaseTemplateData({ payload }) {
+  try {
+    const templateId = payload;
+    const { data } = yield getBaseTemplateDataApi(templateId);
+    const { blocks } = data.act;
+    const htmlBlockArray = blocks.map(({ items }) => items);
+    const htmlBlocks = htmlBlockArray.map((itemArray, index) => (
+      { content:  itemArray.map(item => item.config.value).join(), id: index }
+    ));
+    yield put(handleGetBaseTemplateDataSuccess(data, htmlBlocks));
+  } catch (error) {
+    console.error('------------------------ERROR ON handleGetBaseTemplateData-----------------', error);
+    console.log(error);
+    yield put(handleGetBaseTemplateDataError());
+  }
+}
+
 export default function* handleOverflowEventSaga() {
   yield takeLeading(OVERLFOW, handleOverflowEvent);
   yield takeLeading(ATTEMPT_MOVE_CONTENT_UP, handleAttemptMoveContentUp);
+  yield takeLeading(GET_BASE_TEMPLATE_DATA, handleGetBaseTemplateData);
 }

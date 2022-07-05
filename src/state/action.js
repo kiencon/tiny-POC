@@ -78,3 +78,18 @@ export const handleMoveContentUpSuccess = data => ({
   type: MOVE_CONTENT_UP_SUCCESS,
   response: data,
 });
+
+
+export const GET_BASE_TEMPLATE_DATA = 'GET_BASE_TEMPLATE_DATA';
+export const GET_BASE_TEMPLATE_DATA_SUCCESS = 'GET_BASE_TEMPLATE_DATA_SUCCESS';
+export const GET_BASE_TEMPLATE_DATA_ERROR = 'GET_BASE_TEMPLATE_DATA_ERROR';
+
+export const getBaseTemplateData = templateId => ({
+  type: GET_BASE_TEMPLATE_DATA,
+  payload: templateId,
+});
+
+export const handleGetBaseTemplateDataSuccess = (data, htmlBlocks) => ({
+  type: GET_BASE_TEMPLATE_DATA_SUCCESS,
+  payload: { data, htmlBlocks },
+});

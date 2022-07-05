@@ -1,7 +1,5 @@
-import { $axios } from '../utils';
+import $axios from 'axios';
 
-export const getUserInformation = userId => $axios.get(`/user-info/${userId}?timestamp=${new Date().getTime()}`);
-export const getTeams = () => $axios.get(`/team/me?timestamp=${new Date().getTime()}`);
-export const getAvailableCategories = () => $axios.get(`/available-categories?timestamp=${new Date().getTime()}`);
-export const getMappingCategories = () => $axios.get(`/conf/datalayer/getDatalayer?timestamp=${new Date().getTime()}`);
-export const changeTokenWithTeamId = teamId => $axios.post('/user/jwt', { teamId });
+export const getBaseTemplateDataApi = (templateId = 19523) => $axios
+  .get(`https://proapi.survivalapp.com/activity/821752`);
+
