@@ -1,31 +1,10 @@
 import immutable from 'immutable';
-import { INIT_EDITOR_REF, OVERLFOW_ERROR, ON_KEY_UP_EVENT, OVERLFOW_SUCCESS } from './action';
+import { ACTION, CONNECTED, DISCONNECT, WAITING } from './action';
 
 export const initialState = {
-  data: [{
-    id: 'page1',
-    content: "<h1>Page 1</h1><h1>Page 1</h1><p>I'm ok</p>"
-  }, {
-    id: 'page2',
-    content: "<h1>Page 2</h1><p>Hello I love you so much</p><p>No, no no</p><p>I'm ok</p>"
-  }, {
-    id: 'page3',
-    content: "<h1>Page 3</h1><p><br></p><p>Hello I love you so much</p><p>No, no no</p><h3>Testing</h3>"
-  }],
-  refs: {},
-};
-
-const getRefs = stateRef => stateRef.get('data').refs;
-
-const setCaret = (el) => {
-  const range = document.createRange()
-  const sel = window.getSelection()
-
-  range.setStart(el.lastChild, 1)
-  range.collapse(true)
-
-  sel.removeAllRanges()
-  sel.addRange(range)
+  isConnected: false,
+  isWaiting: false,
+  action: '',
 };
 
 const init = () => {
@@ -45,36 +24,30 @@ const init = () => {
 
 const blocksReducer = (state = init(), action) => {
   switch (action.type) {
-    case INIT_EDITOR_REF: {
-      const { id, refObj } = action.payload;
-      const cloneRefs = getRefs(state);
-      cloneRefs[id] = refObj;
-      setCaret(refObj.targetElm);
-
-      return state
-        .update('data', data => ({
-          ...data,
-          refs: cloneRefs,
-        }));
-    }
-
-    case OVERLFOW_SUCCESS: {
-      const { data, refs } = action.response;
+    case CONNECTED: {
       return state.update('data', () => ({
-        data,
-        refs,
+        isConnected: true
       }));
     }
-
-    case ON_KEY_UP_EVENT: {
-      //todo
-      return state;
+    case DISCONNECT: {
+      return state.update('data', () => ({
+        isConnected: false
+      }));
     }
-
-    case OVERLFOW_ERROR: {
-      return action.response;
+    case WAITING: {
+      return state.update('data', data => ({
+        ...data,
+        action: '',
+        isWaiting: true,
+      }));
     }
-
+    case ACTION: {
+      return state.update('data', data => ({
+        ...data,
+        isWaiting: false,
+        action: action.payload,
+      }));
+    }
     default:
       return state;
   }
